@@ -1,0 +1,21 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core">
+	<SelectDialog
+		id="idSelectDialogDistribuidor"
+		noDataText="{i18n>no_data}"
+		title="{i18n>title_dialog_distribuidor}"
+		search=".onSearchDialog"
+		confirm=".onDialogSelectedData($event, 'idMultiInputIMEI')"
+		cancel=".onDialogClose"
+        multiSelect="true"
+        rememberSelections="true"
+		items="{DialogModel>/Distribuidor}">
+		<StandardListItem
+			title="{DialogModel>Descripcion}"
+			description="{DialogModel>Objeto}"			
+			iconDensityAware="false"
+			iconInset="false"
+			type="Active" />
+	</SelectDialog>
+</core:FragmentDefinition>
