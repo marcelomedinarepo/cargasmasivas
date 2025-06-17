@@ -4,7 +4,7 @@
 	xmlns:u="sap.ui.unified"
 	xmlns:fb="sap.ui.comp.filterbar"
 	xmlns:mvc="sap.ui.core.mvc">
-	<f:DynamicPage id="page" showFooter="true">
+	<f:DynamicPage id="page" showFooter="true" busy="{AppJsonModel>/busy}">
 		
 		<!-- DynamicPage Header -->
 		<f:header>

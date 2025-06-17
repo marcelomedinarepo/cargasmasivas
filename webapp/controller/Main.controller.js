@@ -2,7 +2,8 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
 	"sap/ui/export/Spreadsheet",
 	"sap/ui/core/util/File",
-], (Controller, Spreadsheet, FileUtil) => {
+	"sap/m/MessageToast"
+], (Controller, Spreadsheet, FileUtil, MessageToast) => {
     "use strict";
 
     return Controller.extend("lomanegra.cargas.controller.Main", {
@@ -49,17 +50,22 @@ sap.ui.define([
 
 			onDownloadTemplate: async function() {
 				var that = this;
+				let oModel = this.getOwnerComponent().getModel("AppJsonModel");
 				try {
-				const aData = await this.readService();
-				debugger;
-			    that._downloadTemplate();
-				} catch (err) {
+					oModel.setProperty("/busy", true);
+					const aData = await this.readService();
 					debugger;
-					if (err.responseText !== undefined) {
-						let error = JSON.parse(err.responseText).error.message.value;
-						this.onShowError(error);
+					oModel.setProperty("/busy", false);
+					that._downloadTemplate();
+					} catch (err) {
+						oModel.setProperty("/busy", false);
+						if (err.responseText !== undefined) {
+							let error = JSON.parse(err.responseText).error.message.value;
+							MessageToast.show(error);
+						}else{
+							MessageToast.show("Error de comunicación");
+						}
 					}
-				}
 			},
 
 			_downloadTemplate: function () {
