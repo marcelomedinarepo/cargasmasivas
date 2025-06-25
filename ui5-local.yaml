@@ -30,9 +30,9 @@ server:
       configuration:
         ignoreCertError: false # If set to true, certificate errors will be ignored. E.g. self-signed certificates will be accepted
         backend:
-          - url: https://vhlness3ci.sap.lomanegra.com:44300
-            client: '300'
-            destination: loma negra
+          - url: https://vhlneds4ci.sap.lomanegra.com:44300
+            client: '110'
+            destination: Loma Negra DS4
             path: /sap
     - name: sap-fe-mockserver
       beforeMiddleware: csp

@@ -17,8 +17,8 @@ server:
           url: https://ui5.sap.com
         backend:
           - url: https://vhlness3ci.sap.lomanegra.com:44300
-            client: '300'
-            destination: loma negra
+            client: '110'
+            destination: Loma Negra DS4
             path: /sap
     - name: fiori-tools-appreload
       afterMiddleware: compression

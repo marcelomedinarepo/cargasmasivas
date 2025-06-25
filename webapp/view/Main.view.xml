@@ -21,7 +21,7 @@
 
 							<fb:FilterGroupItem name="file" groupName="Group1" visibleInFilterBar="true">
 								<fb:control>
-									<u:FileUploader buttonText="{i18n>UploaderButton}" id="fileUploader" uploadOnChange="false" fileType="xlsx" change="onFileChange" placeholder="{i18n>uploadPlaceholder}" width="50%" />
+									<u:FileUploader buttonText="{i18n>UploaderButton}"  id="fileUploader" uploadOnChange="false" fileType="xlsx" change="onFileChange" placeholder="{i18n>uploadPlaceholder}" width="50%" />
 								</fb:control>
 							</fb:FilterGroupItem>
 						</fb:filterGroupItems>
@@ -31,7 +31,7 @@
 		</f:header>
 		<!-- DynamicPage Content -->
 		<f:content>
-			<Table id="table" items="{AppJsonModel>/DataTemplate}" inset="false" visible="{AppJsonModel>/visibleTable}" class="sapUiResponsiveMargin">
+			<!-- <Table id="table" items="{AppJsonModel>/DataTemplate}" inset="false" visible="{AppJsonModel>/visibleTable}" class="sapUiResponsiveMargin">
 				<columns>
 					<Column>
 						<Text text="{i18n>Item}" />
@@ -76,7 +76,7 @@
 						</cells>
 					</ColumnListItem>
 				</items>
-			</Table>
+			</Table> -->
 
 		</f:content>
 
