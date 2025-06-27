@@ -31,65 +31,23 @@
 		</f:header>
 		<!-- DynamicPage Content -->
 		<f:content>
-			<!-- <Table id="table" items="{AppJsonModel>/DataTemplate}" inset="false" visible="{AppJsonModel>/visibleTable}" class="sapUiResponsiveMargin">
-				<columns>
-					<Column>
-						<Text text="{i18n>Item}" />
-					</Column>
-					<Column>
-						<Text text="{i18n>PurchaseRequisitionType}" />
-					</Column>
-					<Column>
-						<Text text="{i18n>Material}" />
-					</Column>
-					<Column>
-						<Text text="{i18n>Quantity}" />
-					</Column>
-					<Column>
-						<Text text="{i18n>Unit}" />
-					</Column>
-					<Column>
-						<Text text="{i18n>Plant}" />
-					</Column>
-					<Column>
-						<Text text="{i18n>StorageLocation}" />
-					</Column>
-					<Column>
-						<Text text="{i18n>PurchasingGroup}" />
-					</Column>
-					<Column>
-						<Text text="{i18n>DeliveryDate}" />
-					</Column>
-				</columns>
-				<items>
-					<ColumnListItem>
-						<cells>
-							<Text text="{AppJsonModel>Item}" />
-							<Text text="{AppJsonModel>PurchaseRequisitionType}" />
-							<Text text="{AppJsonModel>Material}" />
-							<Text text="{AppJsonModel>Quantity}" />
-							<Text text="{AppJsonModel>Unit}" />
-							<Text text="{AppJsonModel>Plant}" />
-							<Text text="{AppJsonModel>StorageLocation}" />
-							<Text text="{AppJsonModel>PurchasingGroup}" />
-							<Text text="{AppJsonModel>DeliveryDate}" />
-						</cells>
-					</ColumnListItem>
-				</items>
-			</Table> -->
+			
 
 		</f:content>
 
 		<f:footer>
 			<OverflowToolbar>
-				<ToolbarSpacer/>
-
+				
+				<Button
+                    id="messagePopoverBtn"
+                    text="{=${AppJsonModel>/ErrorsTerminar}.length}"
+                    type="Reject"
+                    icon="sap-icon://error"
+                    visible="true"
+                    press="onShowErrorsTerminar"
+                />
+				<ToolbarSpacer />
 				<Button type="Default" text="{i18n>post}" press="onContabilizar" visible="{AppJsonModel>/visibleTable}">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="NeverOverflow" />
-					</layoutData>
-				</Button>
-				<Button type="Emphasized" text="{i18n>showLog}" press="onMostrarLog" visible="{AppJsonModel>/visibleTable}">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="NeverOverflow" />
 					</layoutData>

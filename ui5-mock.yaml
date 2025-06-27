@@ -16,7 +16,7 @@ server:
             - /test-resources
           url: https://ui5.sap.com
         backend:
-          - url: https://vhlness3ci.sap.lomanegra.com:44300
+          - url: https://vhlneds4ci.sap.lomanegra.com:44300
             client: '110'
             destination: Loma Negra DS4
             path: /sap
