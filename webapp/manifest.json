@@ -1,7 +1,7 @@
 {
   "_version": "1.65.0",
   "sap.app": {
-    "id": "lomanegra.cargas",
+    "id": "ehs.ehs142.cargamuestreos.app",
     "type": "application",
     "i18n": "i18n/i18n.properties",
     "applicationVersion": {
@@ -60,7 +60,7 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "lomanegra.cargas.i18n.i18n"
+          "bundleName": "ehs.ehs142.cargamuestreos.app.i18n.i18n"
         }
       },
       "AppJsonModel": {
@@ -92,9 +92,9 @@
         "transition": "slide",
         "type": "View",
         "viewType": "XML",
-        "path": "lomanegra.cargas.view",
+        "path": "ehs.ehs142.cargamuestreos.app.view",
         "async": true,
-        "viewPath": "lomanegra.cargas.view"
+        "viewPath": "ehs.ehs142.cargamuestreos.app.view"
       },
       "routes": [
         {
@@ -113,7 +113,7 @@
       }
     },
     "rootView": {
-      "viewName": "lomanegra.cargas.view.App",
+      "viewName": "ehs.ehs142.cargamuestreos.app.view.App",
       "type": "XML",
       "id": "App"
     }

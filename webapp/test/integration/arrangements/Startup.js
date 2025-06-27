@@ -14,7 +14,7 @@ sap.ui.define([
 			// start the app UI component
 			this.iStartMyUIComponent({
 				componentConfig: {
-					name: "lomanegra.cargas",
+					name: "ehs.ehs142.cargamuestreos.app",
 					async: true
 				},
 				hash: oOptions.hash,

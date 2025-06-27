@@ -2,7 +2,7 @@
 
 specVersion: "3.1"
 metadata:
-  name: lomanegra.cargas
+  name: ehs.ehs142.cargamuestreos.app
 type: application
 server:
   customMiddleware:
@@ -17,7 +17,7 @@ server:
           url: https://ui5.sap.com
         backend:
           - url: https://vhlneds4ci.sap.lomanegra.com:44300
-            client: '110'
+            client: '100'
             destination: Loma Negra DS4
             path: /sap
     - name: fiori-tools-appreload
@@ -29,7 +29,7 @@ server:
     - name: fiori-tools-preview
       afterMiddleware: fiori-tools-appreload
       configuration:
-        component: lomanegra.cargas
+        component: ehs.ehs142.cargamuestreos.app
         ui5Theme: sap_horizon
     - name: sap-fe-mockserver
       beforeMiddleware: csp

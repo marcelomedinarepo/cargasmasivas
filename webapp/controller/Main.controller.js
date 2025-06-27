@@ -7,7 +7,7 @@ sap.ui.define([
 ], (Controller, Spreadsheet, FileUtil, MessageBox, MessageToast) => {
 	"use strict";
 
-	return Controller.extend("lomanegra.cargas.controller.Main", {
+	return Controller.extend("ehs.ehs142.cargamuestreos.app.controller.Main", {
 		onInit() {
 			this._setFields();
 		},

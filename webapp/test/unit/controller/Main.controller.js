@@ -1,7 +1,7 @@
 /*global QUnit*/
 
 sap.ui.define([
-	"lomanegra/cargas/controller/Main.controller"
+	"ehs/ehs142/cargamuestreos/app/controller/Main.controller"
 ], function (Controller) {
 	"use strict";
 

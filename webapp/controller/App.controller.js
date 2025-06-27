@@ -3,7 +3,7 @@ sap.ui.define([
 ], (BaseController) => {
   "use strict";
 
-  return BaseController.extend("lomanegra.cargas.controller.App", {
+  return BaseController.extend("ehs.ehs142.cargamuestreos.app.controller.App", {
       onInit() {
       }
   });

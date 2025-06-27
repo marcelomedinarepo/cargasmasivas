@@ -1,4 +1,4 @@
-<mvc:View controllerName="lomanegra.cargas.controller.Main"
+<mvc:View controllerName="ehs.ehs142.cargamuestreos.app.controller.Main"
     xmlns="sap.m"
 	xmlns:f="sap.f"
 	xmlns:u="sap.ui.unified"

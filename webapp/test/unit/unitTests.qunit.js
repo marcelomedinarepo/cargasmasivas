@@ -3,7 +3,7 @@
 QUnit.config.autostart = false;
 
 sap.ui.require([
-	"lomanegra/cargas/test/unit/AllTests"
+	"ehs/ehs142/cargamuestreos/app/test/unit/AllTests"
 ], function (Controller) {
 	"use strict";
 	QUnit.start();

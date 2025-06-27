@@ -1,10 +1,10 @@
 sap.ui.define([
     "sap/ui/core/UIComponent",
-    "lomanegra/cargas/model/models"
+    "ehs/ehs142/cargamuestreos/app/model/models"
 ], (UIComponent, models) => {
     "use strict";
 
-    return UIComponent.extend("lomanegra.cargas.Component", {
+    return UIComponent.extend("ehs.ehs142.cargamuestreos.app.Component", {
         metadata: {
             manifest: "json",
             interfaces: [

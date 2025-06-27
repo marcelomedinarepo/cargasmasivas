@@ -7,7 +7,7 @@ sap.ui.define([
 
 	Opa5.extendConfig({
 		arrangements: new Startup(),
-		viewNamespace: "lomanegra.cargas.view.",
+		viewNamespace: "ehs.ehs142.cargamuestreos.app.view.",
 		autoWait: true
 	});
 });
