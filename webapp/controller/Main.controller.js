@@ -15,6 +15,7 @@ sap.ui.define([
 		_setFields: function () {
 			let oModel = this.getOwnerComponent().getModel("AppJsonModel");
 			oModel.setProperty("/visibleTable", false);
+			oModel.setProperty("/visibleLog", false);
 		},
 
 		onFileChange: function (oEvent) {
@@ -137,13 +138,13 @@ sap.ui.define([
 
 			if (errores.length) {
 				MessageBox.error("Se produjeron errores durante la carga. Consultá el detalle.");
-
+				oModel.setProperty("/visibleLog", true);
 				if (oErrorBtn) {
 					oErrorBtn.setText(`Errores (${errores.length})`);
 				}
 			} else {
 				MessageToast.show(`Se actualizaron ${aDatosFiltrados.length} registros correctamente.`);
-
+				oModel.setProperty("/visibleLog", false);
 				if (oErrorBtn) {
 					oErrorBtn.setText("Errores");
 				}

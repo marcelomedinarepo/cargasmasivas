@@ -1,58 +1,73 @@
 <mvc:View controllerName="ehs.ehs142.cargamuestreos.app.controller.Main"
     xmlns="sap.m"
-	xmlns:f="sap.f"
-	xmlns:u="sap.ui.unified"
-	xmlns:fb="sap.ui.comp.filterbar"
-	xmlns:mvc="sap.ui.core.mvc">
-	<f:DynamicPage id="page" showFooter="true" busy="{AppJsonModel>/busy}">
-		
-		<!-- DynamicPage Header -->
-		<f:header>
-			<f:DynamicPageHeader pinnable="false">
-				<f:content>
-					<fb:FilterBar persistencyKey="myPersKey" useToolbar="false" search=".onSearch" filterChange=".onFilterChange" afterVariantLoad=".onAfterVariantLoad" showFilterConfiguration="false" showClearOnFB="false" clear="onClearFilter" showGoOnFB="false">
-						<fb:filterGroupItems>
-							
-							<fb:FilterGroupItem name="template" groupName="Group1" visibleInFilterBar="true" >
-								<fb:control>
-									<Button icon="sap-icon://download" text="{i18n>downloadTemplate}" press="onDownloadTemplate" />
-								</fb:control>
-							</fb:FilterGroupItem>
+    xmlns:f="sap.f"
+    xmlns:u="sap.ui.unified"
+    xmlns:core="sap.ui.core"
+    xmlns:mvc="sap.ui.core.mvc">
 
-							<fb:FilterGroupItem name="file" groupName="Group1" visibleInFilterBar="true">
-								<fb:control>
-									<u:FileUploader buttonText="{i18n>UploaderButton}" id="fileUploader" sameFilenameAllowed="true" uploadOnChange="false" fileType="xlsx" change="onFileChange" placeholder="{i18n>uploadPlaceholder}" width="50%" />
-								</fb:control>
-							</fb:FilterGroupItem>
-						</fb:filterGroupItems>
-					</fb:FilterBar>
-				</f:content>
-			</f:DynamicPageHeader>
-		</f:header>
-		<!-- DynamicPage Content -->
-		<f:content>
-			
+    <f:DynamicPage id="page" showFooter="true" busy="{AppJsonModel>/busy}">
 
-		</f:content>
+        <!-- Encabezado vertical con VBox -->
+        <f:header>
+            <f:DynamicPageHeader pinnable="false">
+                <f:content>
+                    <VBox
+                        alignItems="Start"
+                        class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiSmallMarginBegin sapUiSmallMarginEnd">
 
-		<f:footer>
-			<OverflowToolbar>
-				
-				<Button
+                        <u:FileUploader
+                            id="fileUploader"
+                            buttonText="{i18n>UploaderButton}"
+                            sameFilenameAllowed="true"
+                            uploadOnChange="false"
+                            fileType="xlsx"
+                            change="onFileChange"
+                            placeholder="{i18n>uploadPlaceholder}"
+                            width="300px"
+                            class="sapUiTinyMarginBottom" />
+
+                        <HBox alignItems="Center">
+                            <core:Icon src="sap-icon://download" class="sapUiTinyMarginEnd" />
+                            <Link
+                                text="{i18n>downloadTemplate}"
+                                press="onDownloadTemplate" />
+                        </HBox>
+
+                    </VBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <!-- Contenido principal -->
+        <f:content>
+            <!-- Acá va tu tabla o lo que estés mostrando -->
+        </f:content>
+
+        <!-- Footer con acciones -->
+        <f:footer>
+            <OverflowToolbar>
+                <Button
                     id="messagePopoverBtn"
                     text="{=${AppJsonModel>/ErrorsTerminar}.length}"
                     type="Reject"
                     icon="sap-icon://error"
-                    visible="true"
-                    press="onShowErrorsTerminar"
-                />
-				<ToolbarSpacer />
-				<Button type="Default" text="{i18n>post}" press="onImport" visible="{AppJsonModel>/visibleTable}">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="NeverOverflow" />
-					</layoutData>
-				</Button>
-			</OverflowToolbar>
-		</f:footer>
-	</f:DynamicPage>
+                    visible="{AppJsonModel>/visibleLog}"
+                    press="onShowErrorsTerminar" />
+
+                <ToolbarSpacer />
+				
+
+                <Button
+                    type="Default"
+                    text="{i18n>post}"
+                    press="onImport"
+                    visible="{AppJsonModel>/visibleTable}">
+                    <layoutData>
+                        <OverflowToolbarLayoutData priority="NeverOverflow" />
+                    </layoutData>
+                </Button>
+            </OverflowToolbar>
+        </f:footer>
+
+    </f:DynamicPage>
 </mvc:View>
