@@ -47,7 +47,7 @@
                     press="onShowErrorsTerminar"
                 />
 				<ToolbarSpacer />
-				<Button type="Default" text="{i18n>post}" press="onContabilizar" visible="{AppJsonModel>/visibleTable}">
+				<Button type="Default" text="{i18n>post}" press="onImport" visible="{AppJsonModel>/visibleTable}">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="NeverOverflow" />
 					</layoutData>
