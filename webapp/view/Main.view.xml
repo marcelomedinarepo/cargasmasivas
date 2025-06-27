@@ -21,7 +21,7 @@
 
 							<fb:FilterGroupItem name="file" groupName="Group1" visibleInFilterBar="true">
 								<fb:control>
-									<u:FileUploader buttonText="{i18n>UploaderButton}"  id="fileUploader" uploadOnChange="false" fileType="xlsx" change="onFileChange" placeholder="{i18n>uploadPlaceholder}" width="50%" />
+									<u:FileUploader buttonText="{i18n>UploaderButton}" id="fileUploader" sameFilenameAllowed="true" uploadOnChange="false" fileType="xlsx" change="onFileChange" placeholder="{i18n>uploadPlaceholder}" width="50%" />
 								</fb:control>
 							</fb:FilterGroupItem>
 						</fb:filterGroupItems>

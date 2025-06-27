@@ -225,8 +225,8 @@ sap.ui.define([
 						}
 					}
 			},
-
-			_downloadTemplate: function () {
+			
+				_downloadTemplate: function () {
 				const oModel = this.getOwnerComponent().getModel("AppJsonModel");
 				const aRegistros = oModel.getProperty("/registros") || [];
 
@@ -235,8 +235,8 @@ sap.ui.define([
 					return;
 				}
 				const keys = Object.keys(aRegistros[0]).filter(
-								key => key !== "__metadata" && key !== "status" && key !== "message"
-							);
+					key => key !== "__metadata" && key !== "status" && key !== "message"
+				);
 
 				const sheetData = aRegistros.map(item => {
 					const obj = {};
@@ -247,6 +247,12 @@ sap.ui.define([
 				});
 
 				const ws = XLSX.utils.json_to_sheet(sheetData);
+				// Ocultar la columna 'escenario'
+				const colIndex = keys.indexOf("key");
+				if (colIndex > -1) {
+					ws["!cols"] = ws["!cols"] || [];
+					ws["!cols"][colIndex] = { hidden: true };
+				}
 				const wb = XLSX.utils.book_new();
 				XLSX.utils.book_append_sheet(wb, ws, "Datos");
 
