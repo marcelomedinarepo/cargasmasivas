@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/sap/opu/odata/sap/ZAPI_EHS_CARGA_MUESTREO_O2_SRV/",
+        "uri": "/sap/opu/odata/sap/ZAPI_EHS_CARGA_MUESTREO_O2_SRV/?sap-language=ES",
         "type": "OData",
         "settings": {
           "annotations": [],
@@ -69,7 +69,9 @@
       "Cargas": {
         "dataSource": "mainService",
         "preload": true,
-        "settings": {}
+        "settings": {
+          "sap-language": "ES"
+        }
       }
     },
     "resources": {
