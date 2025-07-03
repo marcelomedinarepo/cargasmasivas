@@ -17,7 +17,7 @@ server:
           url: https://ui5.sap.com
         backend:
           - url: https://vhlneds4ci.sap.lomanegra.com:44300
-            client: '100'
+            client: '110'
             destination: Loma Negra DS4
             path: /sap
     - name: fiori-tools-appreload

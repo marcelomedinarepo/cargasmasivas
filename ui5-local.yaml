@@ -31,7 +31,7 @@ server:
         ignoreCertError: false # If set to true, certificate errors will be ignored. E.g. self-signed certificates will be accepted
         backend:
           - url: https://vhlneds4ci.sap.lomanegra.com:44300
-            client: '100'
+            client: '110'
             destination: Loma Negra DS4
             path: /sap
     - name: sap-fe-mockserver

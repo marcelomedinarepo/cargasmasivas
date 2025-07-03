@@ -56,32 +56,102 @@ sap.ui.define([
 			const oODataModel = this.getOwnerComponent().getModel("Cargas");
 
 			let aDatos = oModel.getProperty("/datosExcel") || [];
-			//Filtramos los registros que tengan "valor" o "fecha_real_medicion"
-			const aDatosFiltrados = aDatos.filter(item =>
-				item.valor?.toString().trim() !== "" ||
-				item.fecha_real_medicion?.toString().trim() !== ""
+
+			const hayIncompletos = aDatos.some(item =>
+				!item.valor?.toString().trim() || !item.fecha_real_medicion?.toString().trim()
 			);
 
-			if (!aDatosFiltrados.length) {
-				MessageToast.show("No hay cambios para enviar al backend.");
+			if (hayIncompletos) {
+				MessageToast.show("Por favor complete todos los registros.");
 				return;
 			}
+
+			const payload = {
+				Dummy: "",
+				MuestreoSet: aDatos
+			};
 
 			oModel.setProperty("/busy", true);
 			oModel.setProperty("/ErrorsTerminar", []);
 
-			//Manejo de errores
-			const handleODataError = function (oError, item) {
-				if (oError.responseText) {
-					try {
-						const oJsonErrors = JSON.parse(oError.responseText);
-						const aRawErrors = oJsonErrors?.error?.innererror?.errordetails;
+			await new Promise((resolve) => {
+				oODataModel.create("/HeaderSet", payload, {
+					success: (oData) => {
+						const mensajes = [];
+						const aResultados = oData.MuestreoSet?.results || [];
 
-						const titulo = `key: ${item.key}  |  id_escenario: ${item.id_escenario}`;
+						aResultados.forEach(item => {
+							let tipoMensaje = "None";
+							if (item.status === "S") tipoMensaje = "Success";
+							else if (item.status === "E") tipoMensaje = "Error";
+							else if (item.status === "W") tipoMensaje = "Warning";
 
-						const mensajesConcatenados = Array.isArray(aRawErrors) && aRawErrors.length > 0
-							? aRawErrors.map(e => "- " + (e.message || "Error desconocido")).join("\n")
-							: oJsonErrors?.error?.message?.value || "Error desconocido";
+							mensajes.push({
+								title: `id_escenario: ${item.id_escenario} | id_muestreo: ${item.id_muestreo}`,
+								message: item.message || "Sin mensaje",
+								type: tipoMensaje
+							});
+						});
+
+						oModel.setProperty("/ErrorsTerminar", mensajes);
+						oModel.setProperty("/visibleLog", mensajes.length > 0);
+
+						const oErrorBtn = this.getView().byId("messagePopoverBtn");
+						if (oErrorBtn) {
+							// Contador por tipo
+							const countError = mensajes.filter(m => m.type === "Error").length;
+							const countWarning = mensajes.filter(m => m.type === "Warning").length;
+							const countSuccess = mensajes.filter(m => m.type === "Success").length;
+
+							const texto = [
+								countError ? `${countError} errores` : null,
+								countWarning ? `${countWarning} warnings` : null,
+								countSuccess ? `${countSuccess} éxitos` : null
+							].filter(Boolean).join(" - ");
+
+							oErrorBtn.setText(texto);
+
+							// Estética del botón
+							if (countError) {
+								oErrorBtn.setType("Reject");
+								oErrorBtn.setIcon("sap-icon://error");
+							} else if (countWarning) {
+								oErrorBtn.setType("Attention");
+								oErrorBtn.setIcon("sap-icon://alert");
+							} else {
+								oErrorBtn.setType("Success");
+								oErrorBtn.setIcon("sap-icon://message-success");
+							}
+						}
+
+						MessageBox.information(`Se procesaron ${aResultados.length} registros.`);
+
+						// Mostrar automáticamente el popover si hay mensajes
+						if (mensajes.length > 0) {
+							setTimeout(() => {
+								this.onShowErrorsTerminar({ getSource: () => this.byId("messagePopoverBtn") });
+							}, 300);
+						}
+
+						resolve();
+					},
+					error: (oError) => {
+						let mensajesConcatenados = "Error desconocido";
+						let titulo = "Error al grabar datos";
+
+						if (oError.responseText) {
+							try {
+								const oJsonErrors = JSON.parse(oError.responseText);
+								const aRawErrors = oJsonErrors?.error?.innererror?.errordetails;
+
+								mensajesConcatenados = Array.isArray(aRawErrors) && aRawErrors.length > 0
+									? aRawErrors.map(e => "- " + (e.message || "Error desconocido")).join("\n")
+									: oJsonErrors?.error?.message?.value || "Error desconocido";
+
+							} catch (e) {
+								mensajesConcatenados = "Error desconocido al procesar la respuesta del servidor";
+							}
+						}
 
 						const nuevoError = {
 							title: titulo,
@@ -89,68 +159,23 @@ sap.ui.define([
 							type: "Error"
 						};
 
-						const aErrorsModel = oModel.getProperty("/ErrorsTerminar") || [];
+						oModel.setProperty("/ErrorsTerminar", [nuevoError]);
+						oModel.setProperty("/visibleLog", true);
 
-						const existente = aErrorsModel.find(e => e.title === titulo);
-						if (existente) {
-							existente.message += `\n${mensajesConcatenados}`;
-						} else {
-							aErrorsModel.push(nuevoError);
+						const oErrorBtn = this.getView().byId("messagePopoverBtn");
+						if (oErrorBtn) {
+							oErrorBtn.setText("Errores (1)");
+							oErrorBtn.setType("Reject");
+							oErrorBtn.setIcon("sap-icon://error");
 						}
 
-						oModel.setProperty("/ErrorsTerminar", aErrorsModel);
-					} catch (e) {
-						const fallbackError = {
-							title: `key: ${item.key}  |  id_escenario: ${item.id_escenario}`,
-							message: "Error desconocido al procesar la respuesta del servidor",
-							type: "Error"
-						};
-						const currentErrors = oModel.getProperty("/ErrorsTerminar") || [];
-						oModel.setProperty("/ErrorsTerminar", [...currentErrors, fallbackError]);
+						MessageBox.error("Se produjeron errores durante la carga. Consultá el detalle.");
+						resolve();
 					}
-				}
-			}.bind(this);
-
-			// Updates
-			for (let i = 0; i < aDatosFiltrados.length; i++) {
-				const item = aDatosFiltrados[i];
-				const sPath = `/MuestreoSet(key='${item.key}')`;
-
-				await new Promise((resolve) => {
-					oODataModel.update(sPath, item, {
-						success: () => {
-							console.log(`Actualizado OK: ${item.key}`);
-							resolve();
-						},
-						error: (oError) => {
-							handleODataError(oError, item);
-							resolve();
-						}
-					});
 				});
-			}
+			});
 
 			oModel.setProperty("/busy", false);
-
-			//Mostramos resumen y actualizamos count de errores
-			const errores = oModel.getProperty("/ErrorsTerminar") || [];
-			const oErrorBtn = this.getView().byId("messagePopoverBtn");
-
-			if (errores.length) {
-				MessageBox.error("Se produjeron errores durante la carga. Consultá el detalle.");
-				oModel.setProperty("/visibleLog", true);
-				if (oErrorBtn) {
-					oErrorBtn.setText(`Errores (${errores.length})`);
-				}
-			} else {
-				MessageToast.show(`Se actualizaron ${aDatosFiltrados.length} registros correctamente.`);
-				oModel.setProperty("/visibleLog", false);
-				if (oErrorBtn) {
-					oErrorBtn.setText("Errores");
-				}
-				MessageBox.success("Todos los registros se actualizaron correctamente.");
-			}
-
 			this.byId("fileUploader").setValue("");
 		},
 
@@ -162,47 +187,48 @@ sap.ui.define([
 		},
 
 		createMessagePopover: function () {
-			const that = this;
+			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
+			const aMensajes = oModel.getProperty("/ErrorsTerminar") || [];
 
-			this.oMP = new sap.m.MessagePopover({
-				activeTitlePress: function (oEvent) {
-					const oItem = oEvent.getParameter("item"),
-						oPage = that.getView().byId("messageHandlingPage"),
-						oMessage = oItem.getBindingContext("message").getObject(),
-						oControl = sap.ui.core.Element.registry.get(oMessage.getControlId());
+			this.oMP = new sap.m.MessagePopover();
+			const oBtn = this.getView().byId("messagePopoverBtn");
+			oBtn.addDependent(this.oMP);
 
-					if (oControl) {
-						oPage.scrollToElement(oControl.getDomRef(), 200, [0, -100]);
-						setTimeout(function () {
-							const bIsBehindOtherElement = isBehindOtherElement(oControl.getDomRef());
-							if (bIsBehindOtherElement) {
-								this.close();
-							}
-							if (oControl.isFocusable()) {
-								oControl.focus();
-							}
-						}.bind(this), 300);
-					}
-				},
+			const grupos = {
+				Error: [],
+				Warning: [],
+				Success: []
+			};
 
-				items: {
-					path: "AppJsonModel>/ErrorsTerminar",
-					template: new sap.m.MessageItem({
-						// Título: key + id_escenario
-						title: "{AppJsonModel>title}",
-
-						//Mensaje de error
-						description: "{AppJsonModel>message}",
-
-						// Tipo de mensaje (Error, Warning, Info, Success)
-						type: "{AppJsonModel>type}"
-					})
-				},
-
-				groupItems: true // Agrupa por título
+			aMensajes.forEach(m => {
+				grupos[m.type]?.push(m);
 			});
 
-			this.getView().byId("messagePopoverBtn").addDependent(this.oMP);
+			const addGroup = (tipo, tituloGrupo) => {
+				if (!grupos[tipo].length) return;
+
+				// Título de grupo
+				this.oMP.addItem(new sap.m.MessagePopoverItem({
+					title: tituloGrupo,
+					description: "",
+					type: tipo,
+					activeTitle: false,
+					markupDescription: false
+				}));
+
+				// Mensajes individuales
+				grupos[tipo].forEach(m => {
+					this.oMP.addItem(new sap.m.MessagePopoverItem({
+						title: m.title,
+						description: m.message,
+						type: m.type
+					}));
+				});
+			};
+
+			addGroup("Error", "Errores");
+			addGroup("Warning", "Advertencias");
+			addGroup("Success", "Éxitos");
 		},
 
 		onDownloadTemplate: async function () {
@@ -233,6 +259,7 @@ sap.ui.define([
 				MessageToast.show("No hay datos para exportar.");
 				return;
 			}
+
 			const keys = Object.keys(aRegistros[0]).filter(
 				key => key !== "__metadata" && key !== "status" && key !== "message"
 			);
@@ -246,12 +273,18 @@ sap.ui.define([
 			});
 
 			const ws = XLSX.utils.json_to_sheet(sheetData);
-			// Ocultamos la columna 'key' para el usuario.
-			const colIndex = keys.indexOf("key");
-			if (colIndex > -1) {
-				ws["!cols"] = ws["!cols"] || [];
-				ws["!cols"][colIndex] = { hidden: true };
-			}
+
+			// Ocultamos columnas 'key', 'key_splng' y 'key_amns'
+			const columnsToHide = ["key", "key_splng", "key_amns"];
+			ws["!cols"] = ws["!cols"] || [];
+
+			columnsToHide.forEach((colName) => {
+				const index = keys.indexOf(colName);
+				if (index > -1) {
+					ws["!cols"][index] = { hidden: true };
+				}
+			});
+
 			const wb = XLSX.utils.book_new();
 			XLSX.utils.book_append_sheet(wb, ws, "Datos");
 
