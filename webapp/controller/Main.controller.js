@@ -56,19 +56,35 @@ sap.ui.define([
 
 		onImport: async function () {
 			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
-			const oODataModel = this.getOwnerComponent().getModel("Cargas");
 
-			const oFileUploader = this.byId("fileUploader");
-			const file = oFileUploader.getValue();
-
-			if (!file) {
-				MessageToast.show("Por favor, cargue una plantilla");
-				return;
-			}
+			if (!this.validarArchivoCargado()) return;
 
 			const confirmado = await this.confirmarProcesamiento();
 			if (!confirmado) return;
 
+			if (!this.validarDatosCompletos()) return;
+
+			const payload = this.construirPayload();
+
+			oModel.setProperty("/busy", true);
+			oModel.setProperty("/ErrorsTerminar", []);
+
+			await this.enviarDatos(payload);
+
+			oModel.setProperty("/busy", false);
+		},
+
+		validarArchivoCargado: function () {
+			const file = this.byId("fileUploader").getValue();
+			if (!file) {
+				sap.m.MessageToast.show("Por favor, cargue una plantilla");
+				return false;
+			}
+			return true;
+		},
+
+		validarDatosCompletos: function () {
+			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
 			const aDatos = oModel.getProperty("/datosExcel") || [];
 
 			const hayIncompletos = aDatos.some(item =>
@@ -76,21 +92,30 @@ sap.ui.define([
 			);
 
 			if (hayIncompletos) {
-				MessageToast.show("Por favor, complete todos los registros.");
-				return;
+				sap.m.MessageToast.show("Por favor, complete todos los registros.");
+				return false;
 			}
+			return true;
+		},
 
-			const payload = {
+		construirPayload: function () {
+			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
+			return {
 				Dummy: "",
-				MuestreoSet: aDatos
+				MuestreoSet: oModel.getProperty("/datosExcel") || []
 			};
+		},
 
-			oModel.setProperty("/busy", true);
-			oModel.setProperty("/ErrorsTerminar", []);
+		enviarDatos: function (payload) {
+			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
+			const oODataModel = this.getOwnerComponent().getModel("Cargas");
 
-			await new Promise((resolve) => {
+			return new Promise((resolve) => {
 				oODataModel.create("/HeaderSet", payload, {
 					success: (oData) => {
+						// Limpiar popover anterior si existe
+						this.oMP?.destroy();
+
 						const mensajes = [];
 						const aResultados = oData.MuestreoSet?.results || [];
 
@@ -110,7 +135,7 @@ sap.ui.define([
 						oModel.setProperty("/ErrorsTerminar", mensajes);
 						oModel.setProperty("/visibleLog", mensajes.length > 0);
 
-						MessageToast.show(`Se procesaron ${aResultados.length} registros.`);
+						sap.m.MessageToast.show(`Se procesaron ${aResultados.length} registros.`);
 
 						if (mensajes.length > 0) {
 							setTimeout(() => {
@@ -121,38 +146,37 @@ sap.ui.define([
 						resolve();
 					},
 					error: (oError) => {
-						let mensajesConcatenados = "Error desconocido";
-						let titulo = "Error al grabar datos";
+						// Limpiar popover anterior si existe
+						this.oMP?.destroy();
 
-						if (oError.responseText) {
-							try {
-								const oJsonErrors = JSON.parse(oError.responseText);
-								const aRawErrors = oJsonErrors?.error?.innererror?.errordetails;
-
-								mensajesConcatenados = Array.isArray(aRawErrors) && aRawErrors.length > 0
-									? aRawErrors.map(e => "- " + (e.message || "Error desconocido")).join("\n")
-									: oJsonErrors?.error?.message?.value || "Error desconocido";
-
-							} catch (e) {
-								mensajesConcatenados = "Error desconocido al procesar la respuesta del servidor";
-							}
-						}
+						const mensajesConcatenados = this.obtenerMensajeError(oError);
 
 						oModel.setProperty("/ErrorsTerminar", [{
-							title: titulo,
+							title: "Error al grabar datos",
 							message: mensajesConcatenados,
 							type: "Error"
 						}]);
 						oModel.setProperty("/visibleLog", true);
 
-						MessageBox.error("Se produjeron errores durante la carga. Consultá el detalle.");
+						sap.m.MessageBox.error("Se produjeron errores durante la carga. Consultá el detalle.");
 						resolve();
 					}
 				});
 			});
+		},
 
-			oModel.setProperty("/busy", false);
-			this.byId("fileUploader").setValue("");
+		obtenerMensajeError: function (oError) {
+			try {
+				const oJsonErrors = JSON.parse(oError.responseText);
+				const aRawErrors = oJsonErrors?.error?.innererror?.errordetails;
+
+				if (Array.isArray(aRawErrors) && aRawErrors.length > 0) {
+					return aRawErrors.map(e => "- " + (e.message || "Error desconocido")).join("\n");
+				}
+				return oJsonErrors?.error?.message?.value || "Error desconocido";
+			} catch (e) {
+				return "Error desconocido al procesar la respuesta del servidor";
+			}
 		},
 
 		onShowErrorsTerminar: function (oEvent) {
@@ -168,7 +192,7 @@ sap.ui.define([
 			const cantidad = aMensajes.length;
 
 			if (this.oMP) {
-				this.oMP.destroy(); 
+				this.oMP.destroy();
 			}
 
 			this.oMP = new sap.m.MessagePopover();
