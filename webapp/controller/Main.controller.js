@@ -56,6 +56,11 @@ sap.ui.define([
 
 		onImport: async function () {
 			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
+			if (this.oMP && this.oMP.isOpen()) {
+				this.oMP.close();
+				this.oMP.destroy();
+				this.oMP = null;
+			}
 
 			if (!this.validarArchivoCargado()) return;
 
@@ -146,7 +151,6 @@ sap.ui.define([
 						resolve();
 					},
 					error: (oError) => {
-						// Limpiar popover anterior si existe
 						this.oMP?.destroy();
 
 						const mensajesConcatenados = this.obtenerMensajeError(oError);
@@ -180,39 +184,57 @@ sap.ui.define([
 		},
 
 		onShowErrorsTerminar: function (oEvent) {
-			if (!this.oMP) {
-				this.createMessagePopover();
+			const oSource = oEvent.getSource();
+
+			// Si ya existe el MessagePopover, hacemos toggle sobre el botón actual
+			if (this.oMP) {
+				// Verificamos si aún está asociado al botón correcto
+				if (this.oMP.isOpen()) {
+					this.oMP.close();
+				} else {
+					this.oMP.toggle(oSource);
+				}
+				return;
 			}
-			this.oMP.toggle(oEvent.getSource());
+
+			// Si no existe, lo creamos y lo abrimos
+			this.oMP = this.createMessagePopover(oSource);
+			this.oMP.openBy(oSource);
 		},
 
-		createMessagePopover: function () {
+
+		createMessagePopover: function (oSource) {
 			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
 			const aMensajes = oModel.getProperty("/ErrorsTerminar") || [];
 			const cantidad = aMensajes.length;
 
-			if (this.oMP) {
-				this.oMP.destroy();
-			}
+			const oMP = new sap.m.MessagePopover();
 
-			this.oMP = new sap.m.MessagePopover();
-			this.byId("messagePopoverBtn").addDependent(this.oMP);
-
-			this.oMP.addItem(new sap.m.MessagePopoverItem({
+			// Título resumen
+			oMP.addItem(new sap.m.MessagePopoverItem({
 				title: `${cantidad} registros procesados`,
 				description: "",
 				type: "None",
 				activeTitle: false
 			}));
 
-			// Mensajes del backend
 			aMensajes.forEach(m => {
-				this.oMP.addItem(new sap.m.MessagePopoverItem({
+				oMP.addItem(new sap.m.MessagePopoverItem({
 					type: m.type,
 					title: m.title,
 					description: m.message
 				}));
 			});
+
+			oSource.addDependent(oMP);
+
+			// Registrar el evento close para poder liberar la referencia si querés
+			oMP.attachAfterClose(() => {
+				this.oMP.destroy();
+				this.oMP = null;
+			});
+
+			return oMP;
 		},
 
 		getHighestSeverityIcon: function (aMessages) {

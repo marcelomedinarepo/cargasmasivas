@@ -52,7 +52,8 @@
                     text="{ path: 'AppJsonModel>/ErrorsTerminar', formatter: '.getHighestSeverityText' }"
                     type="{ path: 'AppJsonModel>/ErrorsTerminar', formatter: '.getHighestSeverityType' }"
                     press="onShowErrorsTerminar"
-                    visible="{AppJsonModel>/visibleLog}" />
+                    visible="{AppJsonModel>/visibleLog}"
+                    enabled="{= !${AppJsonModel>/busy} }" />
 
                 <ToolbarSpacer />
 				
@@ -61,7 +62,8 @@
                     type="Default"
                     text="{i18n>post}"
                     press="onImport"
-                    visible="{AppJsonModel>/archivoCargado}">
+                    visible="{AppJsonModel>/archivoCargado}"
+                    enabled="{= !${AppJsonModel>/busy} }">
                     <layoutData>
                         <OverflowToolbarLayoutData priority="NeverOverflow" />
                     </layoutData>
