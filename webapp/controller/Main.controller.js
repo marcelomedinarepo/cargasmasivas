@@ -16,13 +16,18 @@ sap.ui.define([
 			let oModel = this.getOwnerComponent().getModel("AppJsonModel");
 			oModel.setProperty("/visibleTable", false);
 			oModel.setProperty("/visibleLog", false);
+			oModel.setProperty("/archivoCargado", false);
 		},
 
 		onFileChange: function (oEvent) {
 			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
 			const file = oEvent.getParameter("files")[0];
 
+			oModel.setProperty("/ErrorsTerminar", []);
+			oModel.setProperty("/visibleLog", false);
+
 			if (file && file.name.endsWith(".xlsx")) {
+				oModel.setProperty("/archivoCargado", true);
 				const reader = new FileReader();
 				reader.onload = async (e) => {
 					const data = e.target.result;
@@ -32,15 +37,10 @@ sap.ui.define([
 					const jsonRaw = XLSX.utils.sheet_to_json(sheet);
 
 					const json = jsonRaw.map(item => {
-						// Quitamos del excel las columnas status y message
 						const { status, message, ...rest } = item;
-
-						// Convertimos los valores a String
 						return {
 							...rest,
-							valor: item.valor !== undefined && item.valor !== null
-								? String(item.valor)
-								: ""
+							valor: item.valor !== undefined && item.valor !== null ? String(item.valor) : ""
 						};
 					});
 
@@ -48,6 +48,9 @@ sap.ui.define([
 					oModel.setProperty("/visibleTable", true);
 				};
 				reader.readAsBinaryString(file);
+			} else {
+				oModel.setProperty("/archivoCargado", false); // archivo inválido
+				oModel.setProperty("/visibleTable", false);
 			}
 		},
 
@@ -55,14 +58,25 @@ sap.ui.define([
 			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
 			const oODataModel = this.getOwnerComponent().getModel("Cargas");
 
-			let aDatos = oModel.getProperty("/datosExcel") || [];
+			const oFileUploader = this.byId("fileUploader");
+			const file = oFileUploader.getValue();
+
+			if (!file) {
+				MessageToast.show("Por favor, cargue una plantilla");
+				return;
+			}
+
+			const confirmado = await this.confirmarProcesamiento();
+			if (!confirmado) return;
+
+			const aDatos = oModel.getProperty("/datosExcel") || [];
 
 			const hayIncompletos = aDatos.some(item =>
 				!item.valor?.toString().trim() || !item.fecha_real_medicion?.toString().trim()
 			);
 
 			if (hayIncompletos) {
-				MessageToast.show("Por favor complete todos los registros.");
+				MessageToast.show("Por favor, complete todos los registros.");
 				return;
 			}
 
@@ -96,37 +110,8 @@ sap.ui.define([
 						oModel.setProperty("/ErrorsTerminar", mensajes);
 						oModel.setProperty("/visibleLog", mensajes.length > 0);
 
-						const oErrorBtn = this.getView().byId("messagePopoverBtn");
-						if (oErrorBtn) {
-							// Contador por tipo
-							const countError = mensajes.filter(m => m.type === "Error").length;
-							const countWarning = mensajes.filter(m => m.type === "Warning").length;
-							const countSuccess = mensajes.filter(m => m.type === "Success").length;
+						MessageToast.show(`Se procesaron ${aResultados.length} registros.`);
 
-							const texto = [
-								countError ? `${countError} errores` : null,
-								countWarning ? `${countWarning} warnings` : null,
-								countSuccess ? `${countSuccess} éxitos` : null
-							].filter(Boolean).join(" - ");
-
-							oErrorBtn.setText(texto);
-
-							// Estética del botón
-							if (countError) {
-								oErrorBtn.setType("Reject");
-								oErrorBtn.setIcon("sap-icon://error");
-							} else if (countWarning) {
-								oErrorBtn.setType("Attention");
-								oErrorBtn.setIcon("sap-icon://alert");
-							} else {
-								oErrorBtn.setType("Success");
-								oErrorBtn.setIcon("sap-icon://message-success");
-							}
-						}
-
-						MessageBox.information(`Se procesaron ${aResultados.length} registros.`);
-
-						// Mostrar automáticamente el popover si hay mensajes
 						if (mensajes.length > 0) {
 							setTimeout(() => {
 								this.onShowErrorsTerminar({ getSource: () => this.byId("messagePopoverBtn") });
@@ -153,21 +138,12 @@ sap.ui.define([
 							}
 						}
 
-						const nuevoError = {
+						oModel.setProperty("/ErrorsTerminar", [{
 							title: titulo,
 							message: mensajesConcatenados,
 							type: "Error"
-						};
-
-						oModel.setProperty("/ErrorsTerminar", [nuevoError]);
+						}]);
 						oModel.setProperty("/visibleLog", true);
-
-						const oErrorBtn = this.getView().byId("messagePopoverBtn");
-						if (oErrorBtn) {
-							oErrorBtn.setText("Errores (1)");
-							oErrorBtn.setType("Reject");
-							oErrorBtn.setIcon("sap-icon://error");
-						}
 
 						MessageBox.error("Se produjeron errores durante la carga. Consultá el detalle.");
 						resolve();
@@ -189,46 +165,42 @@ sap.ui.define([
 		createMessagePopover: function () {
 			const oModel = this.getOwnerComponent().getModel("AppJsonModel");
 			const aMensajes = oModel.getProperty("/ErrorsTerminar") || [];
+			const cantidad = aMensajes.length;
+
+			if (this.oMP) {
+				this.oMP.destroy(); 
+			}
 
 			this.oMP = new sap.m.MessagePopover();
-			const oBtn = this.getView().byId("messagePopoverBtn");
-			oBtn.addDependent(this.oMP);
+			this.byId("messagePopoverBtn").addDependent(this.oMP);
 
-			const grupos = {
-				Error: [],
-				Warning: [],
-				Success: []
-			};
+			this.oMP.addItem(new sap.m.MessagePopoverItem({
+				title: `${cantidad} registros procesados`,
+				description: "",
+				type: "None",
+				activeTitle: false
+			}));
 
+			// Mensajes del backend
 			aMensajes.forEach(m => {
-				grupos[m.type]?.push(m);
-			});
-
-			const addGroup = (tipo, tituloGrupo) => {
-				if (!grupos[tipo].length) return;
-
-				// Título de grupo
 				this.oMP.addItem(new sap.m.MessagePopoverItem({
-					title: tituloGrupo,
-					description: "",
-					type: tipo,
-					activeTitle: false,
-					markupDescription: false
+					type: m.type,
+					title: m.title,
+					description: m.message
 				}));
+			});
+		},
 
-				// Mensajes individuales
-				grupos[tipo].forEach(m => {
-					this.oMP.addItem(new sap.m.MessagePopoverItem({
-						title: m.title,
-						description: m.message,
-						type: m.type
-					}));
-				});
-			};
+		getHighestSeverityIcon: function (aMessages) {
+			if (!Array.isArray(aMessages) || aMessages.length === 0) return "sap-icon://message-information";
 
-			addGroup("Error", "Errores");
-			addGroup("Warning", "Advertencias");
-			addGroup("Success", "Éxitos");
+			let icon = "sap-icon://message-information";
+			aMessages.forEach(m => {
+				if (m.type === "Error") icon = "sap-icon://error";
+				else if (m.type === "Warning" && icon !== "sap-icon://error") icon = "sap-icon://alert";
+				else if (m.type === "Success" && icon !== "sap-icon://error" && icon !== "sap-icon://alert") icon = "sap-icon://message-success";
+			});
+			return icon;
 		},
 
 		onDownloadTemplate: async function () {
@@ -274,7 +246,6 @@ sap.ui.define([
 
 			const ws = XLSX.utils.json_to_sheet(sheetData);
 
-			// Ocultamos columnas 'key', 'key_splng' y 'key_amns'
 			const columnsToHide = ["key", "key_splng", "key_amns"];
 			ws["!cols"] = ws["!cols"] || [];
 
@@ -309,5 +280,43 @@ sap.ui.define([
 				});
 			});
 		},
+
+		getHighestSeverityType: function (aMessages) {
+			if (!Array.isArray(aMessages) || aMessages.length === 0) return "Neutral";
+
+			let type = "Neutral";
+			aMessages.forEach(m => {
+				if (m.type === "Error") type = "Reject";
+				else if (m.type === "Warning" && type !== "Reject") type = "Attention";
+				else if (m.type === "Success" && type !== "Reject" && type !== "Attention") type = "Success";
+			});
+			return type;
+		},
+
+		getHighestSeverityText: function (aMessages) {
+			if (!Array.isArray(aMessages)) return "";
+
+			const countError = aMessages.filter(m => m.type === "Error").length;
+			const countWarning = aMessages.filter(m => m.type === "Warning").length;
+			const countSuccess = aMessages.filter(m => m.type === "Success").length;
+
+			return [
+				countError ? `${countError} errores` : null,
+				countWarning ? `${countWarning} warnings` : null,
+				countSuccess ? `${countSuccess} éxitos` : null
+			].filter(Boolean).join(" - ");
+		},
+
+		confirmarProcesamiento: function () {
+			return new Promise((resolve) => {
+				sap.m.MessageBox.confirm("¿Desea enviar los datos a procesar?", {
+					title: "Confirmación",
+					actions: ["Confirmar", "Cancelar"],
+					onClose: (sAction) => {
+						resolve(sAction === "Confirmar");
+					}
+				});
+			});
+		}
 	});
 });

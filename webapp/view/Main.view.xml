@@ -48,11 +48,11 @@
             <OverflowToolbar>
                 <Button
                     id="messagePopoverBtn"
-                    text="{=${AppJsonModel>/ErrorsTerminar}.length}"
-                    type="Reject"
-                    icon="sap-icon://error"
-                    visible="{AppJsonModel>/visibleLog}"
-                    press="onShowErrorsTerminar" />
+                    icon="{ path: 'AppJsonModel>/ErrorsTerminar', formatter: '.getHighestSeverityIcon' }"
+                    text="{ path: 'AppJsonModel>/ErrorsTerminar', formatter: '.getHighestSeverityText' }"
+                    type="{ path: 'AppJsonModel>/ErrorsTerminar', formatter: '.getHighestSeverityType' }"
+                    press="onShowErrorsTerminar"
+                    visible="{AppJsonModel>/visibleLog}" />
 
                 <ToolbarSpacer />
 				
@@ -61,7 +61,7 @@
                     type="Default"
                     text="{i18n>post}"
                     press="onImport"
-                    visible="{AppJsonModel>/visibleTable}">
+                    visible="{AppJsonModel>/archivoCargado}">
                     <layoutData>
                         <OverflowToolbarLayoutData priority="NeverOverflow" />
                     </layoutData>
